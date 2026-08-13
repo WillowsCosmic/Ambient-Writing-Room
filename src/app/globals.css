@@ -1,0 +1,78 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  .texture-bg {
+    background-color: #F4ECD8;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    background-blend-mode: multiply;
+  }
+  .torn-edge {
+    clip-path: polygon(1% 2%, 98% 1%, 99% 98%, 2% 99%);
+  }
+  .deckled-edge {
+    clip-path: polygon(
+      0.5% 1.5%, 1.5% 0.5%, 98.5% 1%, 99.5% 2%, 
+      99% 98%, 98% 99.5%, 2% 99%, 0.5% 98%
+    );
+  }
+  .wax-seal {
+    background: radial-gradient(circle at 30% 30%, #8a1c1c, #400a0c);
+    box-shadow: inset -2px -2px 6px rgba(0,0,0,0.5), inset 2px 2px 6px rgba(255,255,255,0.2), 0 4px 6px rgba(0,0,0,0.3);
+  }
+  .sundial-arc {
+    width: 300px;
+    height: 150px;
+    border-top-left-radius: 150px;
+    border-top-right-radius: 150px;
+    border: 2px solid #867271;
+    border-bottom: 0;
+    position: relative;
+    margin: 0 auto;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f5edd9;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9c1bf;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #867271;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
