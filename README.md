@@ -77,3 +77,58 @@ Make sure you have Node.js (v18 or higher) installed on your system.
 1. Navigate to the project directory:
    ```bash
    cd stitch_ambient_writing_room
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser and visit:
+   ```text
+   http://localhost:3000
+   ```
+
+---
+
+## 🗺️ Project Structure
+
+```text
+stitch_ambient_writing_room/
+├── src/
+│   ├── app/
+│   │   ├── page.jsx           # Setup Ritual (Audio Sliders & Intention Setting)
+│   │   ├── editor/page.jsx    # Unified Study Editor & 3D Notebook Canvas
+│   │   ├── study/page.jsx     # Chronicles of Focus (Recharts & Streak Counter)
+│   │   ├── folio/page.jsx     # Journal Entries Gallery
+│   │   ├── archives/page.jsx  # Session History Archives
+│   │   ├── mood/page.jsx      # Postcard Mood Check-in
+│   │   ├── inkwell/page.jsx   # Pigments & Typography Studio
+│   │   ├── layout.jsx         # App Shell Layout with Header & Audio Bar
+│   │   ├── icon.svg           # Dark Academia Wax Seal & Gold Quill Favicon
+│   │   └── globals.css        # Global CSS & Material Symbols imports
+│   ├── components/
+│   │   ├── DeskCompanions.jsx # Skeuomorphic Candle, Tea, Fern, Pocket Watch
+│   │   ├── AudioBar.jsx       # Procedural Ambient Audio Mixer
+│   │   └── Header.jsx         # Navigation Header
+│   ├── lib/
+│   │   ├── audioEngine.js     # Web Audio API Procedural Synthesizer Engine
+│   │   └── exportPdf.js       # High-Resolution A4 PDF Exporter
+│   └── store/
+│       └── useStore.js        # Zustand State Store with localStorage persistence
+├── public/                    # Static Assets
+├── tailwind.config.js         # Tailwind CSS Dark Academia Theme Config
+├── postcss.config.js          # PostCSS Loader Configuration
+└── README.md                  # Documentation
+```
+
+---
+
+## 📄 License
+
+This project is open source and available under the MIT License.
