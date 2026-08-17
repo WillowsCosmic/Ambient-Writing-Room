@@ -1,13 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Library, Archive, Feather, Flame, Sparkles, BookMarked } from 'lucide-react';
+import { BookOpen, Library, Archive, Feather, Flame, Sparkles, BookMarked, Lock, KeyRound } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import AuthorPrivacyModal from './AuthorPrivacyModal';
 
 export default function Header() {
   const pathname = usePathname();
-  const { isAudioMuted, toggleAudioMute } = useStore();
+  const { isAudioMuted, toggleAudioMute, getActiveAuthor } = useStore();
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
+  const activeAuthor = getActiveAuthor();
 
   const navLinks = [
     { href: '/', label: 'Setup Ritual', icon: Sparkles },
@@ -20,20 +25,84 @@ export default function Header() {
   ];
 
   return (
-    <header className="w-full z-40 bg-surface/80 backdrop-blur-md border-b-2 border-brass/40 shadow-sm sticky top-0 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 md:px-margin-page py-3 flex justify-between items-center">
-        {/* Title */}
-        <div className="flex items-center gap-4">
-          <Link href="/" className="group flex flex-col">
-            <span className="font-display-md text-2xl md:text-3xl italic text-[#400a0c] tracking-tight group-hover:opacity-80 transition-opacity">
-              Ambient Writing Room
-            </span>
-            <span className="h-px w-24 bg-brass/60 mt-0.5" />
-          </Link>
+    <>
+      <header className="w-full z-40 bg-surface/80 backdrop-blur-md border-b-2 border-brass/40 shadow-sm sticky top-0 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 md:px-margin-page py-3 flex justify-between items-center">
+          {/* Title */}
+          <div className="flex items-center gap-4">
+            <Link href="/" className="group flex flex-col">
+              <span className="font-display-md text-2xl md:text-3xl italic text-[#400a0c] tracking-tight group-hover:opacity-80 transition-opacity">
+                Ambient Writing Room
+              </span>
+              <span className="h-px w-24 bg-brass/60 mt-0.5" />
+            </Link>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 bg-surface-container/60 p-1.5 rounded-full border border-outline-variant/30">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-label-sm transition-all duration-200 ${
+                    isActive
+                      ? 'bg-[#400a0c] text-white shadow-sm font-bold'
+                      : 'text-on-surface-variant hover:text-[#400a0c] hover:bg-surface-variant/40'
+                  }`}
+                >
+                  <Icon size={14} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Actions & Profile */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleAudioMute}
+              className={`px-3 py-1.5 rounded-full border text-xs font-label-sm transition-all flex items-center gap-1.5 ${
+                isAudioMuted
+                  ? 'border-outline/30 text-outline'
+                  : 'border-brass/60 text-[#400a0c] bg-brass/10 font-bold'
+              }`}
+              title={isAudioMuted ? 'Unmute Ambience' : 'Mute Ambience'}
+            >
+              <span>{isAudioMuted ? '🔇 Muted' : '🔊 Sound On'}</span>
+            </button>
+
+            {/* Profile Wax Seal Avatar & Privacy Lock Button */}
+            <button
+              onClick={() => setIsPrivacyModalOpen(true)}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-full border border-brass/50 bg-surface/90 hover:bg-brass/10 transition-all shadow-sm group cursor-pointer"
+              title="Manage Private Author Profile & Passcode Vault"
+            >
+              <div className="w-8 h-8 rounded-full border border-brass/80 overflow-hidden p-0.5 bg-primary-container relative">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs0j21jH-1gBncQI3VXaP8D89qc0Bg3m0DEVxTwD4dLMsuSqSYHUnE6MBhqpc-vLhvdIldZMJopwk1uvra-uaQ2RXdszhueN0_fLn8j2uyHsbckutgMIkVjSx8F0XZqvTvx0m2yYAy33UGKmY-YUtj8rgi0kGg8M2JnYPGjkRVNKYdzNd62yNmM70SPC1NOxDQ4FxLfmUeqO0wF6lWT4xTMU7M6uI2EaoAswRmwOnXA_3hKWyKVik"
+                  alt="Wax seal insignia profile"
+                  className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform"
+                />
+              </div>
+
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="font-writing-surface text-sm text-[#400a0c] font-bold leading-none flex items-center gap-1">
+                  {activeAuthor?.name || 'Private Author'}
+                  {activeAuthor?.pin ? <Lock size={10} className="text-[#400a0c]" /> : <KeyRound size={10} className="text-[#400a0c]" />}
+                </span>
+                <span className="font-label-sm text-[10px] text-on-surface-variant/70 uppercase tracking-wider">
+                  Private Vault
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1 bg-surface-container/60 p-1.5 rounded-full border border-outline-variant/30">
+        {/* Mobile Sub-Navigation Bar */}
+        <div className="lg:hidden flex items-center gap-2 overflow-x-auto px-4 py-2 bg-surface-container-low border-t border-outline-variant/20 no-scrollbar">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -41,63 +110,21 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-label-sm transition-all duration-200 ${
-                  isActive
-                    ? 'bg-[#400a0c] text-white shadow-sm font-bold'
-                    : 'text-on-surface-variant hover:text-[#400a0c] hover:bg-surface-variant/40'
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-label-sm whitespace-nowrap transition-colors ${
+                  isActive ? 'bg-[#400a0c] text-white font-bold' : 'text-on-surface-variant hover:bg-surface-variant/40'
                 }`}
               >
-                <Icon size={14} />
+                <Icon size={12} />
                 <span>{link.label}</span>
               </Link>
             );
           })}
-        </nav>
-
-        {/* Actions & Profile */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={toggleAudioMute}
-            className={`px-3 py-1.5 rounded-full border text-xs font-label-sm transition-all flex items-center gap-1.5 ${
-              isAudioMuted
-                ? 'border-outline/30 text-outline'
-                : 'border-brass/60 text-[#400a0c] bg-brass/10 font-bold'
-            }`}
-            title={isAudioMuted ? 'Unmute Ambience' : 'Mute Ambience'}
-          >
-            <span>{isAudioMuted ? '🔇 Muted' : '🔊 Sound On'}</span>
-          </button>
-
-          {/* Profile Wax Seal Avatar */}
-          <div className="w-9 h-9 rounded-full border-2 border-brass/60 overflow-hidden shadow-sm p-0.5 bg-primary-container">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs0j21jH-1gBncQI3VXaP8D89qc0Bg3m0DEVxTwD4dLMsuSqSYHUnE6MBhqpc-vLhvdIldZMJopwk1uvra-uaQ2RXdszhueN0_fLn8j2uyHsbckutgMIkVjSx8F0XZqvTvx0m2yYAy33UGKmY-YUtj8rgi0kGg8M2JnYPGjkRVNKYdzNd62yNmM70SPC1NOxDQ4FxLfmUeqO0wF6lWT4xTMU7M6uI2EaoAswRmwOnXA_3hKWyKVik"
-              alt="Wax seal insignia profile"
-              className="w-full h-full object-cover rounded-full"
-            />
-          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Sub-Navigation Bar */}
-      <div className="lg:hidden flex items-center gap-2 overflow-x-auto px-4 py-2 bg-surface-container-low border-t border-outline-variant/20 no-scrollbar">
-        {navLinks.map((link) => {
-          const Icon = link.icon;
-          const isActive = pathname === link.href;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-label-sm whitespace-nowrap transition-colors ${
-                isActive ? 'bg-[#400a0c] text-white font-bold' : 'text-on-surface-variant hover:bg-surface-variant/40'
-              }`}
-            >
-              <Icon size={12} />
-              <span>{link.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </header>
+      {/* Author Privacy & Vault Modal */}
+      <AuthorPrivacyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
+    </>
   );
 }
+

@@ -5,7 +5,8 @@ import { useStore } from '../../store/useStore';
 import { BookMarked, Sparkles, Plus, Heart, Feather, Calendar } from 'lucide-react';
 
 export default function JournalEntriesPage() {
-  const { journalEntries } = useStore();
+  const { journalEntries, getActiveAuthor } = useStore();
+  const activeAuthor = getActiveAuthor();
 
   const getMoodBadgeColor = (mood) => {
     switch (mood) {
@@ -28,9 +29,12 @@ export default function JournalEntriesPage() {
         {/* Header */}
         <header className="mt-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant/40 pb-6">
           <div>
-            <div className="flex items-center gap-2 text-[#400a0c] mb-1">
+            <div className="flex items-center gap-3 text-[#400a0c] mb-1">
               <BookMarked size={32} />
               <h1 className="font-display-lg text-4xl md:text-5xl font-bold">Journal Entries & Musings</h1>
+              <span className="px-3 py-1 bg-brass/10 border border-brass/40 rounded-full text-xs font-label-sm text-[#400a0c] font-bold">
+                🔒 Private Journal: {activeAuthor?.name || 'Author'}
+              </span>
             </div>
             <p className="font-writing-surface text-2xl text-on-surface-variant/80">
               Sealed reflections & emotional heart-checks recorded after your writing sessions.

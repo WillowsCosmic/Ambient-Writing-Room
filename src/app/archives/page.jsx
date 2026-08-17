@@ -6,8 +6,9 @@ import { exportManuscriptToPdf } from '../../lib/exportPdf';
 import { Archive, Download, Feather, Clock, Bookmark, Sparkles, PlusCircle } from 'lucide-react';
 
 export default function ArchivesPage() {
-  const { historyEntries, addArchiveEntry, setManuscript } = useStore();
+  const { historyEntries, addArchiveEntry, setManuscript, getActiveAuthor } = useStore();
   const [downloadingId, setDownloadingId] = useState(null);
+  const activeAuthor = getActiveAuthor();
 
   const handleDownloadPdf = async (entry) => {
     setDownloadingId(entry.id);
@@ -24,9 +25,12 @@ export default function ArchivesPage() {
         {/* Header */}
         <header className="mt-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant/40 pb-6">
           <div>
-            <div className="flex items-center gap-2 text-[#400a0c] mb-1">
+            <div className="flex items-center gap-3 text-[#400a0c] mb-1">
               <Archive size={28} />
               <h1 className="font-display-lg text-4xl md:text-5xl font-bold">Session History Archives</h1>
+              <span className="px-3 py-1 bg-brass/10 border border-brass/40 rounded-full text-xs font-label-sm text-[#400a0c] font-bold">
+                🔒 Private Vault: {activeAuthor?.name || 'Author'}
+              </span>
             </div>
             <p className="font-writing-surface text-2xl text-on-surface-variant/80">
               Your real manuscript endeavors, dynamically filed & saved to PDF.
@@ -35,7 +39,7 @@ export default function ArchivesPage() {
 
           <button
             onClick={() => addArchiveEntry()}
-            className="px-4 py-2 bg-[#400a0c] text-white rounded-full font-label-sm text-xs flex items-center gap-1.5 shadow-md hover:bg-primary-container font-bold"
+            className="px-4 py-2 bg-[#400a0c] text-white rounded-full font-label-sm text-xs flex items-center gap-1.5 shadow-md hover:bg-primary-container font-bold cursor-pointer"
           >
             <PlusCircle size={16} />
             <span>Archive Current Editor Draft</span>

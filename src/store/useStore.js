@@ -22,6 +22,28 @@ const getActualPast7Days = () => {
 export const useStore = create(
   persist(
     (set, get) => ({
+      // Multi-Author Privacy State
+      authors: [
+        {
+          id: 'author_default',
+          name: 'Primary Author',
+          pin: null, // optional 4-digit passcode
+          createdAt: Date.now(),
+        },
+      ],
+      activeAuthorId: 'author_default',
+      authorVaults: {
+        author_default: {
+          manuscript: `The autumn leaves tumbled past the study window, carrying with them the scent of woodsmoke and damp earth. I pulled my shawl tighter around my shoulders, adjusting the brass wick-trimmer beside my inkwell.`,
+          historyEntries: [],
+          journalEntries: [],
+          streakDays: 0,
+          lastWritingDate: null,
+          latestReflection: null,
+          moodLog: getActualPast7Days(),
+        },
+      },
+
       // Active Session State
       manuscript: `The autumn leaves tumbled past the study window, carrying with them the scent of woodsmoke and damp earth. I pulled my shawl tighter around my shoulders, adjusting the brass wick-trimmer beside my inkwell.`,
       wordGoal: 1000,
@@ -53,19 +75,151 @@ export const useStore = create(
       },
       isAudioMuted: false,
 
-      // Real User Streak Data: Starts at 0!
+      // Real User Streak Data
       lastWritingDate: null,
       streakDays: 0,
       latestReflection: null,
 
-      // Dynamic Real User Session Archives (Empty by default)
+      // Dynamic Real User Session Archives (Private to active author)
       historyEntries: [],
 
-      // Sealed Journal Entries from Mood Store
+      // Sealed Journal Entries from Mood Store (Private to active author)
       journalEntries: [],
 
       // Mood Log with Dynamic Actual Days of Week
       moodLog: getActualPast7Days(),
+
+      // Privacy & Author Actions
+      getActiveAuthor: () => {
+        const authors = get().authors || [];
+        const activeId = get().activeAuthorId || 'author_default';
+        return authors.find((a) => a.id === activeId) || authors[0] || { id: 'author_default', name: 'Primary Author' };
+      },
+
+      createAuthorProfile: ({ name, pin }) => {
+        const trimmedName = name.trim() || 'Anonymous Author';
+        const newAuthorId = `author_${Date.now()}`;
+        const newAuthor = {
+          id: newAuthorId,
+          name: trimmedName,
+          pin: pin || null,
+          createdAt: Date.now(),
+        };
+
+        const defaultManuscript = `A fresh parchment in ${trimmedName}'s private vault. Write your musings in quiet solitude...`;
+
+        const newVault = {
+          manuscript: defaultManuscript,
+          historyEntries: [],
+          journalEntries: [],
+          streakDays: 0,
+          lastWritingDate: null,
+          latestReflection: null,
+          moodLog: getActualPast7Days(),
+        };
+
+        // Save current active author's vault before switching
+        const currentActiveId = get().activeAuthorId;
+        const currentVaults = { ...get().authorVaults };
+        currentVaults[currentActiveId] = {
+          manuscript: get().manuscript,
+          historyEntries: get().historyEntries,
+          journalEntries: get().journalEntries,
+          streakDays: get().streakDays,
+          lastWritingDate: get().lastWritingDate,
+          latestReflection: get().latestReflection,
+          moodLog: get().moodLog,
+        };
+
+        currentVaults[newAuthorId] = newVault;
+
+        set({
+          authors: [...(get().authors || []), newAuthor],
+          authorVaults: currentVaults,
+          activeAuthorId: newAuthorId,
+          manuscript: newVault.manuscript,
+          historyEntries: newVault.historyEntries,
+          journalEntries: newVault.journalEntries,
+          streakDays: newVault.streakDays,
+          lastWritingDate: newVault.lastWritingDate,
+          latestReflection: newVault.latestReflection,
+          moodLog: newVault.moodLog,
+        });
+
+        return newAuthor;
+      },
+
+      switchAuthorProfile: (targetAuthorId, enteredPin) => {
+        const targetAuthor = (get().authors || []).find((a) => a.id === targetAuthorId);
+        if (!targetAuthor) return { success: false, error: 'Author profile not found' };
+
+        // Verify PIN if set
+        if (targetAuthor.pin && targetAuthor.pin !== enteredPin) {
+          return { success: false, error: 'Incorrect Passcode PIN' };
+        }
+
+        const currentActiveId = get().activeAuthorId;
+        const currentVaults = { ...get().authorVaults };
+
+        // Save active state into current vault
+        currentVaults[currentActiveId] = {
+          manuscript: get().manuscript,
+          historyEntries: get().historyEntries,
+          journalEntries: get().journalEntries,
+          streakDays: get().streakDays,
+          lastWritingDate: get().lastWritingDate,
+          latestReflection: get().latestReflection,
+          moodLog: get().moodLog,
+        };
+
+        const targetVault = currentVaults[targetAuthorId] || {
+          manuscript: `Welcome back to your private sanctuary, ${targetAuthor.name}.`,
+          historyEntries: [],
+          journalEntries: [],
+          streakDays: 0,
+          lastWritingDate: null,
+          latestReflection: null,
+          moodLog: getActualPast7Days(),
+        };
+
+        set({
+          authorVaults: currentVaults,
+          activeAuthorId: targetAuthorId,
+          manuscript: targetVault.manuscript || '',
+          historyEntries: targetVault.historyEntries || [],
+          journalEntries: targetVault.journalEntries || [],
+          streakDays: targetVault.streakDays || 0,
+          lastWritingDate: targetVault.lastWritingDate || null,
+          latestReflection: targetVault.latestReflection || null,
+          moodLog: targetVault.moodLog || getActualPast7Days(),
+        });
+
+        return { success: true };
+      },
+
+      setAuthorPin: (authorId, newPin) => {
+        const authors = (get().authors || []).map((a) =>
+          a.id === authorId ? { ...a, pin: newPin || null } : a
+        );
+        set({ authors });
+      },
+
+      deleteAuthorProfile: (authorId) => {
+        const authors = get().authors || [];
+        if (authors.length <= 1) return false;
+
+        const updatedAuthors = authors.filter((a) => a.id !== authorId);
+        const currentVaults = { ...get().authorVaults };
+        delete currentVaults[authorId];
+
+        set({ authors: updatedAuthors, authorVaults: currentVaults });
+
+        // If deleted author was active, switch to first available author
+        if (get().activeAuthorId === authorId) {
+          get().switchAuthorProfile(updatedAuthors[0].id, updatedAuthors[0].pin);
+        }
+        return true;
+      },
 
       // Actions
       setManuscript: (text) => {
@@ -80,10 +234,19 @@ export const useStore = create(
           newStreak = newStreak === 0 ? 1 : newStreak + 1;
         }
 
+        const activeId = get().activeAuthorId;
+        const currentVaults = { ...get().authorVaults };
+        if (currentVaults[activeId]) {
+          currentVaults[activeId].manuscript = text;
+          currentVaults[activeId].lastWritingDate = today;
+          currentVaults[activeId].streakDays = newStreak;
+        }
+
         set({
           manuscript: text,
           lastWritingDate: today,
           streakDays: newStreak,
+          authorVaults: currentVaults,
           latestReflection: {
             title: text.split('\n')[0] || 'Active Manuscript',
             excerpt: excerpt || 'Quiet solitude of the writing room...',
@@ -133,6 +296,7 @@ export const useStore = create(
 
         const newEntry = {
           id: `h_${Date.now()}`,
+          authorId: get().activeAuthorId,
           timestamp: Date.now(),
           date: 'Just Now',
           month: 'Active Session',
@@ -146,9 +310,17 @@ export const useStore = create(
           content: text,
         };
 
-        set((state) => ({
-          historyEntries: [newEntry, ...state.historyEntries],
-        }));
+        const updatedEntries = [newEntry, ...existingEntries];
+        const activeId = get().activeAuthorId;
+        const currentVaults = { ...get().authorVaults };
+        if (currentVaults[activeId]) {
+          currentVaults[activeId].historyEntries = updatedEntries;
+        }
+
+        set({
+          historyEntries: updatedEntries,
+          authorVaults: currentVaults,
+        });
       },
 
       setWordGoal: (goal) => set({ wordGoal: goal }),
@@ -220,6 +392,7 @@ export const useStore = create(
 
         const newJournalItem = {
           id: `j_${Date.now()}`,
+          authorId: get().activeAuthorId,
           timestamp: Date.now(),
           date: 'Just Now',
           mood: entry.mood,
@@ -230,25 +403,41 @@ export const useStore = create(
 
         const currentLog = get().moodLog;
         const updatedLog = [...currentLog.slice(1), { day: 'Today', score: entry.score, mood: entry.mood }];
+        const updatedJournalEntries = [newJournalItem, ...existingEntries];
 
-        set((state) => ({
-          journalEntries: [newJournalItem, ...state.journalEntries],
+        const activeId = get().activeAuthorId;
+        const currentVaults = { ...get().authorVaults };
+        if (currentVaults[activeId]) {
+          currentVaults[activeId].journalEntries = updatedJournalEntries;
+          currentVaults[activeId].moodLog = updatedLog;
+        }
+
+        set({
+          journalEntries: updatedJournalEntries,
           moodLog: updatedLog,
+          authorVaults: currentVaults,
           latestReflection: {
             title: `Journal Reflection (${entry.mood})`,
             excerpt: newJournalItem.note,
             date: 'Just Now',
             wordCount: words,
           },
-        }));
+        });
       },
 
       incrementStreak: () => set((state) => ({ streakDays: state.streakDays + 1 })),
       resetStreakToZero: () => set({ streakDays: 0 }),
-      clearArchives: () => set({ historyEntries: [] }),
+      clearArchives: () => {
+        const activeId = get().activeAuthorId;
+        const currentVaults = { ...get().authorVaults };
+        if (currentVaults[activeId]) {
+          currentVaults[activeId].historyEntries = [];
+        }
+        set({ historyEntries: [], authorVaults: currentVaults });
+      },
     }),
     {
-      name: 'stitch-ambient-writing-room-store-v7', // Incremented to v7 for clean reset
+      name: 'stitch-ambient-writing-room-store-v8', // Incremented to v8 for clean private author structure
       storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : null)),
     }
   )
